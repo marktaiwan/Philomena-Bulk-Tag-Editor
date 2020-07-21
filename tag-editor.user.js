@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Bulk Tag Editor
+// @name         Bulk Tag Editor (FF Violentmonkey)
 // @description  Streamlined bulk tag editing
 // @version      1.0.0
 // @author       Marker
@@ -12,9 +12,7 @@
 // @match        *://*.ponybooru.org/*
 // @match        *://*.ponerpics.org/*
 // @match        *://*.twibooru.org/*
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @inject-into  page
+// @inject-into  content
 // @noframes
 // ==/UserScript==
 
@@ -22,6 +20,19 @@
 'user strict';
 
 const SCRIPT_ID = 'bulk_tag_editor';
+
+/*
+ *  Workaround for Firefox version of Violentmonkey:
+ *  Because these permissions doesn't work properly when run as content script
+ *  And script won't run at all when run in page context
+ */
+function GM_setValue(id, value) {
+  window.localStorage.setItem(SCRIPT_ID + '__' + id, JSON.stringify(value));
+}
+function GM_getValue(id, defaultValue) {
+  const val = window.localStorage.getItem(SCRIPT_ID + '__' + id);
+  return (val !== null) ? JSON.parse(val) : defaultValue;
+}
 
 class TagEditor {
 
