@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bulk Tag Editor
 // @description  Streamlined bulk tag editing
-// @version      1.0.0
+// @version      1.0.1
 // @author       Marker
 // @license      MIT
 // @namespace    https://github.com/marktaiwan/
@@ -208,7 +208,7 @@ function insertUI() {
 
   if (!tagsForm || $(`#${SCRIPT_ID}_script_container`)) return;  // tagging disabled or ui already exists
 
-  const tagInput = $('#image_tag_input');
+  const tagInput = $('[name="image[tag_input]"]');
   const isFancy = tagInput.classList.contains('hidden');
 
   // outermost container
@@ -277,7 +277,7 @@ function insertUI() {
 }
 
 function applyTags(tagsToAdd, tagsToRemove) {
-  const tagInput = $('#image_tag_input');
+  const tagInput = $('[name="image[tag_input]"]');
   const isFancy = tagInput.classList.contains('hidden');
   const tagPool = deserializeTags(tagInput.value);
 
