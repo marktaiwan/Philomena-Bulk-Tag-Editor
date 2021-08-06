@@ -1,0 +1,17 @@
+{
+    "namespace": "https://github.com/marktaiwan/",
+    "homepageURL": "https://github.com/marktaiwan/Philomena-Bulk-Tag-Editor",
+    "supportURL": "https://github.com/marktaiwan/Philomena-Bulk-Tag-Editor/issues",
+    "match": [
+        "*://*.derpibooru.org/*",
+        "*://*.trixiebooru.org/*",
+        "*://*.ponybooru.org/*",
+        "*://*.ponerpics.org/*",
+        "*://*.twibooru.org/*"
+    ],
+    "grant": [
+        "none"
+    ],
+    "inject-into": "content",
+    "noframes": true
+}
