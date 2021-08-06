@@ -1,0 +1,34 @@
+{
+    "displayName": "Bulk Tag Editor",
+    "name": "tag-editor",
+    "version": "1.1.0",
+    "description": "Streamlined bulk tag editing",
+    "private": true,
+    "author": "Marker",
+    "license": "MIT",
+    "homepage": "https://github.com/marktaiwan/Philomena-Bulk-Tag-Editor",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "npx rollup --config rollup.config.js",
+        "watch": "npx rollup --config rollup.config.js --watch"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.14.8",
+        "@babel/core": "^7.15.0",
+        "@babel/preset-env": "^7.15.0",
+        "@babel/preset-react": "^7.14.5",
+        "@rollup/plugin-babel": "^5.3.0",
+        "@rollup/plugin-commonjs": "^20.0.0",
+        "@rollup/plugin-node-resolve": "^13.0.4",
+        "@rollup/plugin-replace": "^3.0.0",
+        "@rollup/plugin-typescript": "^8.2.5",
+        "@typescript-eslint/eslint-plugin": "^4.29.0",
+        "@typescript-eslint/parser": "^4.29.0",
+        "prettier": "^2.3.2",
+        "rollup": "^2.56.0",
+        "rollup-plugin-prettier": "^2.1.0",
+        "rollup-plugin-userscript-metablock": "^0.3.0",
+        "tslib": "^2.3.0",
+        "typescript": "^4.3.5"
+    }
+}
