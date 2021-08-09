@@ -1,5 +1,5 @@
-import {SCRIPT_ID} from './const';
-import {$, $$, create, serializeTags, deserializeTags} from './util';
+import {SCRIPT_ID} from './globals';
+import {$, $$, create, serializeTags, deserializeTags, getBooruParam} from './util';
 
 
 class TagEditor {
@@ -50,25 +50,20 @@ class TagEditor {
     fancyEditor.style.resize = 'vertical';
 
     const input = create('input');
-    const inputTemplate = $('#taginput-fancy-tag_input');
-    const attributes = [
-      'autocapitalize',
-      'autocomplete',
-      'data-ac',
-      'data-ac-min-length',
-      'data-ac-source',
-      'placeholder',
-      'type',
-    ];
     input.classList.add(
       'input',
       `${SCRIPT_ID}--taginput-input`
     );
-    // copy attributes
-    for (const attr of attributes) {
-      const val = inputTemplate.getAttribute(attr);
-      if (val) input.setAttribute(attr, val);
-    }
+    [
+      ['autocapitalize', 'none'],
+      ['autocomplete', 'off'],
+      ['data-ac', 'true'],
+      ['data-ac-min-length', '3'],
+      ['data-ac-source', getBooruParam('acSource')],
+      ['placeholder', 'add a tag'],
+      ['type', 'text'],
+    ].forEach(([attr, val]) => input.setAttribute(attr, val));
+
     fancyEditor.append(input);
 
     const br = create('br');
@@ -106,7 +101,7 @@ class TagEditor {
         e.preventDefault();
         const tagElement = $('.tag:last-of-type', this.fancyEditor);
         if (!tagElement) return;
-        const tagName = $('[data-tag-name]', tagElement).dataset.tagName!;
+        const tagName = $('[data-tag-name]', tagElement)!.dataset.tagName!;
         this.removeTag(tagName);
       }
 
@@ -155,7 +150,7 @@ class TagEditor {
     if (tagIndex > -1) {
       this.tags.splice(tagIndex, 1);
       const anchor = $(`.tag a[data-tag-name="${tagName}"]`, this.fancyEditor);
-      anchor.parentElement?.remove();
+      anchor!.parentElement!.remove();
     }
     this.plainEditor.value = serializeTags(this.tags);
   }

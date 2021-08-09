@@ -11,6 +11,7 @@
 // @match       *://*.trixiebooru.org/*
 // @match       *://*.ponybooru.org/*
 // @match       *://*.ponerpics.org/*
+// @match       *://*.ponerpics.com/*
 // @match       *://*.twibooru.org/*
 // @inject-into page
 // @noframes
@@ -21,6 +22,29 @@
   'use strict';
 
   const SCRIPT_ID = 'bulk_tag_editor';
+  const booruDefault = {
+    cooldown: 5000,
+    acSource: '/autocomplete/tags?term=',
+    editApiPath: '/images/',
+    authTokenParam: '_csrf_token',
+    oldTagParam: 'image[old_tag_input]',
+    newTagParam: 'image[tag_input]',
+    imagelistSelector: '#imagelist-container section.page__header',
+  };
+  const boorus = {
+    derpibooru: booruDefault,
+    ponybooru: booruDefault,
+    ponerpics: booruDefault,
+    twibooru: {
+      ...booruDefault,
+      acSource: '/tags/autocomplete.json?term=',
+      editApiPath: '/posts/',
+      authTokenParam: 'authenticity_token',
+      oldTagParam: 'post[old_tag_list]',
+      newTagParam: 'post[tag_input]',
+      imagelistSelector: '#imagelist_container section.block__header',
+    },
+  };
 
   /* Shorthands  */
   function $(selector, root = document) {
@@ -32,8 +56,14 @@
   function create(ele) {
     return document.createElement(ele);
   }
+  function onLeftClick(callback, root = document) {
+    root.addEventListener('click', e => {
+      if (e instanceof MouseEvent && e.button === 0) callback(e);
+    });
+  }
 
-  function serializeTags(arr) {
+  function serializeTags(tags) {
+    const arr = tags instanceof Array ? tags : [...tags];
     return arr.join(', ');
   }
   function deserializeTags(str) {
@@ -48,6 +78,49 @@
       }
       return tags;
     }
+  }
+  /**
+   * @returns Booru key. `null` if none match.
+   */
+  function currentBooru() {
+    const booruHostnames = {
+      twibooru: /(www\.)?twibooru\.org/i,
+      ponybooru: /(www\.)?ponybooru\.org/i,
+      ponerpics: /(www\.)?ponerpics\.(org|com)/i,
+      derpibooru: /(www\.)?(derpibooru|trixiebooru)\.org/i,
+    };
+    const hostname = window.location.hostname;
+    for (const [booru, re] of Object.entries(booruHostnames)) {
+      if (re.test(hostname)) return booru;
+    }
+    throw Error('Could not match current booru');
+  }
+  function getBooruParam(key) {
+    const booruId = currentBooru();
+    return boorus[booruId][key];
+  }
+  function getToken() {
+    const ele = $('meta[name="csrf-token"]');
+    if (!ele) throw Error('csrf token element not found');
+    return ele.content;
+  }
+  async function throttle(fn, ...args) {
+    const key = currentBooru() + '_last_exec';
+    const cooldown = getBooruParam('cooldown');
+    const lastRan = GM_getValue(key, 0);
+    const elapsed = Date.now() - lastRan;
+    const timeRemain = Math.max(0, cooldown - elapsed);
+    const result = await new Promise(resolve => {
+      window.setTimeout(() => {
+        resolve(fn(...args));
+      }, timeRemain);
+    });
+    GM_setValue(key, Date.now());
+    return result;
+  }
+  function setMessage(text) {
+    const section = document.getElementById(`${SCRIPT_ID}--message`);
+    if (section) section.innerText = text;
   }
 
   class TagEditor {
@@ -85,22 +158,16 @@
       fancyEditor.style.marginTop = '4px';
       fancyEditor.style.resize = 'vertical';
       const input = create('input');
-      const inputTemplate = $('#taginput-fancy-tag_input');
-      const attributes = [
-        'autocapitalize',
-        'autocomplete',
-        'data-ac',
-        'data-ac-min-length',
-        'data-ac-source',
-        'placeholder',
-        'type',
-      ];
       input.classList.add('input', `${SCRIPT_ID}--taginput-input`);
-      // copy attributes
-      for (const attr of attributes) {
-        const val = inputTemplate.getAttribute(attr);
-        if (val) input.setAttribute(attr, val);
-      }
+      [
+        ['autocapitalize', 'none'],
+        ['autocomplete', 'off'],
+        ['data-ac', 'true'],
+        ['data-ac-min-length', '3'],
+        ['data-ac-source', getBooruParam('acSource')],
+        ['placeholder', 'add a tag'],
+        ['type', 'text'],
+      ].forEach(([attr, val]) => input.setAttribute(attr, val));
       fancyEditor.append(input);
       const br = create('br');
       wrapper.appendChild(span);
@@ -173,7 +240,7 @@
       if (tagIndex > -1) {
         this.tags.splice(tagIndex, 1);
         const anchor = $(`.tag a[data-tag-name="${tagName}"]`, this.fancyEditor);
-        anchor.parentElement?.remove();
+        anchor.parentElement.remove();
       }
       this.plainEditor.value = serializeTags(this.tags);
     }
@@ -190,84 +257,224 @@
     }
   }
 
-  function insertUI() {
-    const tagsForm = $('#tags-form');
-    if (!tagsForm || $(`#${SCRIPT_ID}_script_container`)) return; // tagging disabled or ui already exists
-    const tagInput = $('[name="image[tag_input]"], [name="post[tag_input]"]');
-    const isFancy = tagInput.classList.contains('hidden');
-    // outermost container
+  function createTagEditor() {
     const field = create('div');
     field.id = `${SCRIPT_ID}_script_container`;
     field.classList.add('field');
     const inputField = create('div');
+    inputField.id = `${SCRIPT_ID}_input_field`;
     inputField.classList.add('field');
     inputField.classList.add('flex');
+    field.appendChild(inputField);
+    // buttons
+    const applyButton = createButton('Apply changes', `${SCRIPT_ID}_apply_button`);
+    applyButton.dataset.clickPreventdefault = 'true';
+    applyButton.classList.add('button--state-primary');
+    const saveButton = createButton('Save tags', `${SCRIPT_ID}_save_button`);
+    saveButton.dataset.clickPreventdefault = 'true';
+    saveButton.classList.add('button--state-success');
+    const loadButton = createButton('Load tags', `${SCRIPT_ID}_load_button`);
+    loadButton.dataset.clickPreventdefault = 'true';
+    loadButton.classList.add('button--state-warning');
+    field.append(applyButton, saveButton, loadButton);
+    return field;
+  }
+  function insertUI() {
+    const tagsForm = $('#tags-form');
+    const tagInput = $(`[name="${getBooruParam('newTagParam')}"]`);
+    if (!tagInput || !tagsForm || $(`#${SCRIPT_ID}_script_container`)) return; // tagging disabled or ui already exists
+    const field = createTagEditor();
+    const inputField = $(`#${SCRIPT_ID}_input_field`, field);
+    const applyButton = $(`#${SCRIPT_ID}_apply_button`, field);
+    const saveButton = $(`#${SCRIPT_ID}_save_button`, field);
+    const loadButton = $(`#${SCRIPT_ID}_load_button`, field);
     // tag list input
     const tagAdd = new TagEditor('Tags to add:', 'add-editor');
     const tagRemove = new TagEditor('Tags to remove:', 'remove-editor');
     inputField.appendChild(tagAdd.dom);
     inputField.appendChild(tagRemove.dom);
-    field.appendChild(inputField);
+    const isFancy = tagInput.classList.contains('hidden');
     if (isFancy) {
       $$('.js-taginput-plain', inputField).forEach(ele => ele.classList.add('hidden'));
     } else {
       $$('.js-taginput-fancy', inputField).forEach(ele => ele.classList.add('hidden'));
     }
-    // buttons
-    const applyButton = createButton('Apply changes', `${SCRIPT_ID}_apply_button`);
-    applyButton.dataset.clickPreventdefault = 'true';
-    applyButton.classList.add('button--state-primary');
-    applyButton.addEventListener('click', () => {
+    onLeftClick(() => {
       applyTags(
         deserializeTags(tagAdd.plainEditor.value),
         deserializeTags(tagRemove.plainEditor.value)
       );
-    });
-    const saveButton = createButton('Save tags', `${SCRIPT_ID}_save_button`);
-    saveButton.dataset.clickPreventdefault = 'true';
-    saveButton.classList.add('button--state-success');
-    saveButton.addEventListener('click', () => {
+    }, applyButton);
+    onLeftClick(() => {
       tagAdd.saveTags();
       tagRemove.saveTags();
-    });
-    const loadButton = createButton('Load tags', `${SCRIPT_ID}_load_button`);
-    loadButton.dataset.clickPreventdefault = 'true';
-    loadButton.classList.add('button--state-warning');
-    loadButton.addEventListener('click', () => {
+    }, saveButton);
+    onLeftClick(() => {
       tagAdd.loadTags();
       tagRemove.loadTags();
-    });
-    $('.js-taginput-show').addEventListener('click', () => {
+    }, loadButton);
+    $('.js-taginput-show')?.addEventListener('click', () => {
       [tagAdd, tagRemove].forEach(editor => {
         editor.tags = deserializeTags(editor.plainEditor.value);
         editor.clearFancyEditor();
         editor.tags.forEach(editor.insertTagElement, editor);
       });
     });
-    field.appendChild(applyButton);
-    field.appendChild(saveButton);
-    field.appendChild(loadButton);
-    $('.field', tagsForm).prepend(field);
+    $('.field', tagsForm)?.prepend(field);
+  }
+  function insertBulkUI() {
+    const imageListHeader = $(getBooruParam('imagelistSelector'));
+    if (!imageListHeader) return;
+    const toggleButton = createAnchorButton('Tag Edit', `js--${SCRIPT_ID}--toggle`, 'fa-tags');
+    onLeftClick(toggleUI, toggleButton);
+    const editor = createTagEditor();
+    const inputField = $(`#${SCRIPT_ID}_input_field`, editor);
+    const applyButton = $(`#${SCRIPT_ID}_apply_button`, editor);
+    const saveButton = $(`#${SCRIPT_ID}_save_button`, editor);
+    const loadButton = $(`#${SCRIPT_ID}_load_button`, editor);
+    const messageBox = create('section');
+    messageBox.id = `${SCRIPT_ID}--message`;
+    messageBox.style.margin = '5px';
+    messageBox.style.minHeight = '1.2em';
+    editor.append(messageBox);
+    // tag list input
+    const tagAdd = new TagEditor('Tags to add:', 'add-editor');
+    const tagRemove = new TagEditor('Tags to remove:', 'remove-editor');
+    inputField.appendChild(tagAdd.dom);
+    inputField.appendChild(tagRemove.dom);
+    $$('.js-taginput-plain', inputField).forEach(ele => ele.classList.add('hidden'));
+    onLeftClick(async () => {
+      applyButton.disabled = true;
+      await bulkApplyTags(
+        deserializeTags(tagAdd.plainEditor.value),
+        deserializeTags(tagRemove.plainEditor.value)
+      );
+      applyButton.disabled = false;
+    }, applyButton);
+    onLeftClick(() => {
+      tagAdd.saveTags();
+      tagRemove.saveTags();
+    }, saveButton);
+    onLeftClick(() => {
+      tagAdd.loadTags();
+      tagRemove.loadTags();
+    }, loadButton);
+    editor.style.marginTop = '10px';
+    editor.classList.add('layout--narrow', 'hidden');
+    imageListHeader.append(toggleButton);
+    imageListHeader.after(editor);
+  }
+  function toggleUI() {
+    const editor = $(`#${SCRIPT_ID}_script_container`);
+    const active = editorOn();
+    editor.classList.toggle('hidden', active);
+    if (!active) {
+      document.addEventListener('click', boxClickHandler);
+      getBoxHeaders().forEach(header => header.classList.add('media-box__header--unselected'));
+    } else {
+      document.removeEventListener('click', boxClickHandler);
+      getBoxHeaders().forEach(header =>
+        header.classList.remove('media-box__header--selected', 'media-box__header--unselected')
+      );
+    }
+  }
+  function editorOn() {
+    const editor = $(`#${SCRIPT_ID}_script_container`);
+    return !editor.classList.contains('hidden');
+  }
+  /**
+   * Handles toggling the selected state of thumbnails when script is active
+   */
+  function boxClickHandler(e) {
+    const mediaBox = e.target.closest('.media-box');
+    if (mediaBox) {
+      e.preventDefault();
+      $('.media-box__header', mediaBox)?.classList.toggle('media-box__header--selected');
+    }
+  }
+  function getBoxHeaders() {
+    return $$('#imagelist-container .media-box__header, #imagelist_container .media-box__header');
+  }
+  function setAllHeader(selected) {
+    getBoxHeaders().forEach(header => {
+      header.classList.toggle('media-box__header--selected', selected);
+    });
+  }
+  function createAnchorButton(text, className, icon) {
+    const anchor = create('a');
+    anchor.href = '#';
+    anchor.dataset.preventDefault = 'true';
+    anchor.innerText = text;
+    anchor.classList.add(className);
+    if (icon) {
+      const i = create('i');
+      i.classList.add('fa', icon);
+      anchor.prepend(i, ' ');
+    }
+    return anchor;
+  }
+  async function bulkApplyTags(tagsToAdd, tagsToRemove) {
+    const imageList = [...getBoxHeaders()]
+      .filter(header => header.classList.contains('media-box__header--selected'))
+      .map(header => {
+        const mediaBox = header.parentElement;
+        const imageContainer = $('.image-container', mediaBox);
+        const id = mediaBox.dataset.imageId ?? mediaBox.dataset.postId;
+        const tags = deserializeTags(imageContainer.dataset.imageTagAliases);
+        return [id, new Set(tags), imageContainer];
+      });
+    let done = 0;
+    let errors = 0;
+    const total = imageList.length;
+    setMessage('Initiating...');
+    for (const [id, tags, imageContainer] of imageList) {
+      const oldTags = tags;
+      const newTags = new Set(tags);
+      // apply tag
+      tagsToAdd.forEach(tag => newTags.add(tag));
+      tagsToRemove.forEach(tag => newTags.delete(tag));
+      const result = await throttle(submitEdit, id, oldTags, newTags);
+      if (result) {
+        imageContainer.dataset.imageTagAliases = serializeTags(tags);
+      } else {
+        errors += 1;
+      }
+      setMessage(`Progress: ${++done}/${total}`);
+    }
+    const msg = ['Completed'];
+    if (errors > 0) msg.push(`with ${errors} errors`);
+    setMessage(msg.join(' '));
+    setAllHeader(false);
+  }
+  async function submitEdit(id, oldTags, newTags) {
+    const path = getBooruParam('editApiPath') + id + '/tags';
+    const formEntries = [
+      ['_method', 'put'],
+      [getBooruParam('authTokenParam'), getToken()],
+      [getBooruParam('oldTagParam'), serializeTags(oldTags)],
+      [getBooruParam('newTagParam'), serializeTags(newTags)],
+    ];
+    const form = new FormData();
+    formEntries.forEach(([key, val]) => form.set(key, val));
+    const resp = await fetch(path, {
+      method: 'POST',
+      body: form,
+    });
+    return resp.status == 200;
   }
   function applyTags(tagsToAdd, tagsToRemove) {
     const tagInput = $('[name="image[tag_input]"], [name="post[tag_input]"]');
+    if (!tagInput) throw Error('Page element not found: tagInput');
     const isFancy = tagInput.classList.contains('hidden');
-    const tagPool = deserializeTags(tagInput.value);
+    const tagPool = new Set(deserializeTags(tagInput.value));
     // change to plain editor
-    if (isFancy) $('.js-taginput-hide').click();
-    // append tags
-    for (const tag of tagsToAdd) {
-      if (tagPool.includes(tag)) continue;
-      tagPool.push(tag);
-    }
-    // remove tags
-    for (const tagToRemove of tagsToRemove) {
-      const tagIndex = tagPool.findIndex(tag => tag == tagToRemove);
-      if (tagIndex > -1) tagPool.splice(tagIndex, 1);
-    }
-    tagInput.value = tagPool.join(', ');
+    if (isFancy) $('.js-taginput-hide')?.click();
+    // add and remove tags
+    tagsToAdd.forEach(tag => tagPool.add(tag));
+    tagsToRemove.forEach(tag => tagPool.delete(tag));
+    tagInput.value = [...tagPool].join(', ');
     // revert tag editor
-    if (isFancy) $('.js-taginput-show').click();
+    if (isFancy) $('.js-taginput-show')?.click();
   }
   function createButton(text, id) {
     const button = create('button');
@@ -280,6 +487,7 @@
   if ($('#image_target') || $('#thumbnails-not-yet-generated')) {
     insertUI();
     const content = $('#content');
+    if (!content) throw Error('Element not found: #content');
     const observer = new MutationObserver(records => {
       for (const record of records) {
         for (const node of record.addedNodes) {
@@ -291,4 +499,5 @@
     });
     observer.observe(content, {childList: true});
   }
+  insertBulkUI();
 })();

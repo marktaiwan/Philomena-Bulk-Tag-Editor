@@ -17,3 +17,5 @@ Firefox Violentmonkey version: [Click here to install](https://github.com/markta
 
 ![Screenshot](https://raw.githubusercontent.com/marktaiwan/Philomena-Bulk-Tag-Editor/master/screenshots/screenshot.png)
 
+![Screenshot](https://raw.githubusercontent.com/marktaiwan/Philomena-Bulk-Tag-Editor/master/screenshots/screenshot2.png)
+

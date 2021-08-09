@@ -3,8 +3,8 @@
 
 type SelectorRoot = Document | HTMLElement;
 
-function $<K extends keyof HTMLElementTagNameMap>(selector: K, root?: SelectorRoot): HTMLElementTagNameMap[K];
-function $<T extends HTMLElement>(selector: string, root?: SelectorRoot): T;
+function $<K extends keyof HTMLElementTagNameMap>(selector: K, root?: SelectorRoot): HTMLElementTagNameMap[K] | null;
+function $<T extends HTMLElement>(selector: string, root?: SelectorRoot): T | null;
 function $(selector: string, root: SelectorRoot = document): HTMLElement | null {
   return root.querySelector(selector);
 }
