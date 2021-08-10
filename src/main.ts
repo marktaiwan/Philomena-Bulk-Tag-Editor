@@ -181,7 +181,7 @@ function setAllHeader(selected: boolean): void {
 function createAnchorButton(text: string, className: string, icon?: string) {
   const anchor = create('a');
   anchor.href = '#';
-  anchor.dataset.preventDefault = 'true';
+  anchor.dataset.clickPreventdefault = 'true';
   anchor.innerText = text;
   anchor.classList.add(className);
   if (icon) {
