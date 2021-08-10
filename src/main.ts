@@ -252,7 +252,7 @@ async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>
 }
 
 function applyTags(tagsToAdd: string[], tagsToRemove: string[]): void {
-  const tagInput = $<HTMLInputElement>('[name="image[tag_input]"], [name="post[tag_input]"]');
+  const tagInput = $<HTMLInputElement>(`[name="${getBooruParam('newTagParam')}"]`);
   if (!tagInput) throw Error('Page element not found: tagInput');
   const isFancy = tagInput.classList.contains('hidden');
   const tagPool = new Set(deserializeTags(tagInput.value));
