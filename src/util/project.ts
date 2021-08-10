@@ -1,6 +1,9 @@
-import {SCRIPT_ID} from '../const';
+import type {BooruKeys, BooruData} from '../globals';
+import {$} from './common';
+import {SCRIPT_ID, boorus} from '../globals';
 
-function serializeTags(arr: string[]): string {
+function serializeTags(tags: string[] | Set<string>): string {
+  const arr = tags instanceof Array ? tags : [...tags];
   return arr.join(', ');
 }
 
@@ -16,6 +19,56 @@ function deserializeTags(str: string): string[] {
     }
     return tags;
   }
+}
+
+/**
+ * @returns Booru key. `null` if none match.
+ */
+function currentBooru(): BooruKeys {
+  const booruHostnames: Record<BooruKeys, RegExp> = {
+    twibooru: (/(www\.)?twibooru\.org/i),
+    ponybooru: (/(www\.)?ponybooru\.org/i),
+    ponerpics: (/(www\.)?ponerpics\.(org|com)/i),
+    derpibooru: (/(www\.)?(derpibooru|trixiebooru)\.org/i),
+  };
+  const hostname = window.location.hostname;
+  for (const [booru, re] of Object.entries(booruHostnames) as Array<[BooruKeys, RegExp]>) {
+    if (re.test(hostname)) return booru;
+  }
+  throw Error('Could not match current booru');
+}
+
+function getBooruParam<T extends keyof BooruData>(key: T): BooruData[T] {
+  const booruId = currentBooru();
+  return boorus[booruId][key];
+}
+
+function getToken(): string {
+  const ele = $<HTMLMetaElement>('meta[name="csrf-token"]');
+  if (!ele) throw Error('csrf token element not found');
+  return ele.content;
+}
+
+async function throttle<ReturnType, T extends unknown[]>(fn: (...args: [...T]) => ReturnType, ...args: [...T]): Promise<ReturnType> {
+  const key = currentBooru() + '_last_exec';
+  const cooldown = getBooruParam('cooldown');
+  const lastRan = GM_getValue(key, 0) as number;
+  const elapsed = Date.now() - lastRan;
+  const timeRemain = Math.max(0, cooldown - elapsed);
+
+  const result = await new Promise(resolve => {
+    window.setTimeout(() => {
+      resolve(fn(...args));
+    }, timeRemain);
+  });
+
+  GM_setValue(key, Date.now());
+  return result as ReturnType;
+}
+
+function setMessage(text: string): void {
+  const section = document.getElementById(`${SCRIPT_ID}--message`);
+  if (section) section.innerText = text;
 }
 
 /*
@@ -34,6 +87,10 @@ function GM_getValue<T = unknown>(id: string, defaultValue: T): T {
 export {
   serializeTags,
   deserializeTags,
+  getBooruParam,
+  getToken,
+  throttle,
+  setMessage,
   GM_setValue,
   GM_getValue
 };

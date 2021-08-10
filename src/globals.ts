@@ -1,0 +1,50 @@
+type BooruKeys = [
+  'derpibooru',
+  'ponybooru',
+  'ponerpics',
+  'twibooru',
+][number];
+
+type BooruData = {
+  cooldown: number,
+  acSource: string,
+  editApiPath: string,
+  authTokenParam: string,
+  oldTagParam: string,
+  newTagParam: string,
+  imagelistSelector: string,
+}
+
+const SCRIPT_ID = 'bulk_tag_editor';
+const booruDefault: BooruData = {
+  cooldown: 5000,
+  acSource: '/autocomplete/tags?term=',
+  editApiPath: '/images/',
+  authTokenParam: '_csrf_token',
+  oldTagParam: 'image[old_tag_input]',
+  newTagParam: 'image[tag_input]',
+  imagelistSelector: '#imagelist-container section.page__header',
+};
+const boorus: Record<BooruKeys, Readonly<BooruData>> = {
+  derpibooru: booruDefault,
+  ponybooru: booruDefault,
+  ponerpics: booruDefault,
+  twibooru: {
+    ...booruDefault,
+    acSource: '/tags/autocomplete.json?term=',
+    editApiPath: '/posts/',
+    authTokenParam: 'authenticity_token',
+    oldTagParam: 'post[old_tag_list]',
+    newTagParam: 'post[tag_input]',
+    imagelistSelector: '#imagelist_container section.block__header',
+  },
+};
+
+export type {
+  BooruKeys,
+  BooruData,
+};
+export {
+  SCRIPT_ID,
+  boorus,
+};
