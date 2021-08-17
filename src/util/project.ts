@@ -1,4 +1,5 @@
 import type {BooruKeys, BooruData} from '../globals';
+import type {Philomena, Twibooru} from '../../types/BooruApi';
 import {$} from './common';
 import {SCRIPT_ID, boorus} from '../globals';
 
@@ -71,6 +72,13 @@ function setMessage(text: string): void {
   if (section) section.innerText = text;
 }
 
+async function getTagsFromId(id: string): Promise<Set<string>> {
+  const path = getBooruParam('imageApiPath') + id;
+  const json = await fetch(path).then(resp => resp.json()) as Philomena.Api.Image | Twibooru.Api.Image;
+  const metadata = 'image' in json ? json.image : json.post;
+  return new Set(metadata.tags);
+}
+
 export {
   serializeTags,
   deserializeTags,
@@ -78,4 +86,5 @@ export {
   getToken,
   throttle,
   setMessage,
+  getTagsFromId,
 };

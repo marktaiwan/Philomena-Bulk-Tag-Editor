@@ -1,5 +1,5 @@
 import {SCRIPT_ID} from './globals';
-import {$, $$, create, deserializeTags, getBooruParam, getToken, onLeftClick, serializeTags, setMessage, throttle} from './util';
+import {$, $$, create, deserializeTags, getBooruParam, getTagsFromId, getToken, onLeftClick, serializeTags, setMessage, throttle} from './util';
 import TagEditor from './TagEditor';
 
 function createTagEditor(): HTMLDivElement {
@@ -195,35 +195,32 @@ function createAnchorButton(text: string, className: string, icon?: string) {
 async function bulkApplyTags(tagsToAdd: string[], tagsToRemove: string[]): Promise<void> {
   const imageList = [...getBoxHeaders()]
     .filter(header => header.classList.contains('media-box__header--selected'))
-    .map((header): [string, Set<string>, HTMLElement] => {
+    .map(header => {
       const mediaBox = header.parentElement!;
-      const imageContainer = $('.image-container', mediaBox)!;
       const id = (mediaBox.dataset.imageId ?? mediaBox.dataset.postId)!;
-      const tags = deserializeTags(imageContainer.dataset.imageTagAliases!);
-
-      return [id, new Set(tags), imageContainer];
+      return id;
     });
 
   let done = 0;
   let errors = 0;
   const total = imageList.length;
   setMessage('Initiating...');
-  for (const [id, tags, imageContainer] of imageList) {
-    const oldTags = tags;
-    const newTags = new Set(tags);
+  for (const id of imageList) {
+    try {
+      const tags = await getTagsFromId(id);
+      const oldTags = tags;
+      const newTags = new Set(tags);
 
-    // apply tag
-    tagsToAdd.forEach(tag => newTags.add(tag));
-    tagsToRemove.forEach(tag => newTags.delete(tag));
+      // apply tag
+      tagsToAdd.forEach(tag => newTags.add(tag));
+      tagsToRemove.forEach(tag => newTags.delete(tag));
 
-    const result = await throttle(submitEdit, id, oldTags, newTags);
-
-    if (result) {
-      imageContainer.dataset.imageTagAliases = serializeTags(newTags);
-    } else {
+      await throttle(submitEdit, id, oldTags, newTags);
+    } catch (err) {
       errors += 1;
+    } finally {
+      setMessage(`Progress: ${++done}/${total}`);
     }
-    setMessage(`Progress: ${++done}/${total}`);
   }
   const msg = ['Completed'];
   if (errors > 0) msg.push(`with ${errors} errors`);
@@ -231,7 +228,7 @@ async function bulkApplyTags(tagsToAdd: string[], tagsToRemove: string[]): Promi
   setAllHeader(false);
 }
 
-async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>): Promise<boolean> {
+async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>): Promise<void> {
   const path = getBooruParam('editApiPath') + id + '/tags';
   const formEntries = [
     ['_method', 'put'],
@@ -248,7 +245,9 @@ async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>
       body: form,
     }
   );
-  return (resp.status == 200);
+  if (resp.status !== 200) {
+    throw new Error('status code: ' + resp.status);
+  }
 }
 
 function applyTags(tagsToAdd: string[], tagsToRemove: string[]): void {
