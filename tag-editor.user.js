@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor (FF Violentmonkey)
 // @description Streamlined bulk tag editing
-// @version     1.1.0
+// @version     1.1.1
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -25,6 +25,7 @@
     cooldown: 5000,
     acSource: '/autocomplete/tags?term=',
     editApiPath: '/images/',
+    imageApiPath: '/api/v1/json/images/',
     authTokenParam: '_csrf_token',
     oldTagParam: 'image[old_tag_input]',
     newTagParam: 'image[tag_input]',
@@ -38,6 +39,7 @@
       ...booruDefault,
       acSource: '/tags/autocomplete.json?term=',
       editApiPath: '/posts/',
+      imageApiPath: '/api/v3/posts/',
       authTokenParam: 'authenticity_token',
       oldTagParam: 'post[old_tag_list]',
       newTagParam: 'post[tag_input]',
@@ -120,6 +122,12 @@
   function setMessage(text) {
     const section = document.getElementById(`${SCRIPT_ID$1}--message`);
     if (section) section.innerText = text;
+  }
+  async function getTagsFromId(id) {
+    const path = getBooruParam('imageApiPath') + id;
+    const json = await fetch(path).then(resp => resp.json());
+    const metadata = 'image' in json ? json.image : json.post;
+    return new Set(metadata.tags);
   }
   /*
    *  Workaround for Firefox version of Violentmonkey:
@@ -431,28 +439,27 @@
       .filter(header => header.classList.contains('media-box__header--selected'))
       .map(header => {
         const mediaBox = header.parentElement;
-        const imageContainer = $('.image-container', mediaBox);
         const id = mediaBox.dataset.imageId ?? mediaBox.dataset.postId;
-        const tags = deserializeTags(imageContainer.dataset.imageTagAliases);
-        return [id, new Set(tags), imageContainer];
+        return id;
       });
     let done = 0;
     let errors = 0;
     const total = imageList.length;
     setMessage('Initiating...');
-    for (const [id, tags, imageContainer] of imageList) {
-      const oldTags = tags;
-      const newTags = new Set(tags);
-      // apply tag
-      tagsToAdd.forEach(tag => newTags.add(tag));
-      tagsToRemove.forEach(tag => newTags.delete(tag));
-      const result = await throttle(submitEdit, id, oldTags, newTags);
-      if (result) {
-        imageContainer.dataset.imageTagAliases = serializeTags(tags);
-      } else {
+    for (const id of imageList) {
+      try {
+        const tags = await getTagsFromId(id);
+        const oldTags = tags;
+        const newTags = new Set(tags);
+        // apply tag
+        tagsToAdd.forEach(tag => newTags.add(tag));
+        tagsToRemove.forEach(tag => newTags.delete(tag));
+        await throttle(submitEdit, id, oldTags, newTags);
+      } catch (err) {
         errors += 1;
+      } finally {
+        setMessage(`Progress: ${++done}/${total}`);
       }
-      setMessage(`Progress: ${++done}/${total}`);
     }
     const msg = ['Completed'];
     if (errors > 0) msg.push(`with ${errors} errors`);
@@ -473,10 +480,12 @@
       method: 'POST',
       body: form,
     });
-    return resp.status == 200;
+    if (resp.status !== 200) {
+      throw new Error('status code: ' + resp.status);
+    }
   }
   function applyTags(tagsToAdd, tagsToRemove) {
-    const tagInput = $('[name="image[tag_input]"], [name="post[tag_input]"]');
+    const tagInput = $(`[name="${getBooruParam('newTagParam')}"]`);
     if (!tagInput) throw Error('Page element not found: tagInput');
     const isFancy = tagInput.classList.contains('hidden');
     const tagPool = new Set(deserializeTags(tagInput.value));
