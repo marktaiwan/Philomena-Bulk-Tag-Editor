@@ -219,7 +219,7 @@ async function bulkApplyTags(tagsToAdd: string[], tagsToRemove: string[]): Promi
     const result = await throttle(submitEdit, id, oldTags, newTags);
 
     if (result) {
-      imageContainer.dataset.imageTagAliases = serializeTags(tags);
+      imageContainer.dataset.imageTagAliases = serializeTags(newTags);
     } else {
       errors += 1;
     }
