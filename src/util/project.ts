@@ -73,7 +73,7 @@ function setMessage(text: string): void {
 }
 
 async function getTagsFromId(id: string): Promise<Set<string>> {
-  const path = getBooruParam('imageApiPath') + id;
+  const path = window.location.origin + getBooruParam('imageApiPath') + id;
   const json = await fetch(path).then(resp => resp.json()) as Philomena.Api.Image | Twibooru.Api.Image;
   const metadata = 'image' in json ? json.image : json.post;
   return new Set(metadata.tags);
