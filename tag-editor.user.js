@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.1
+// @version     1.1.2
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -125,7 +125,7 @@
     if (section) section.innerText = text;
   }
   async function getTagsFromId(id) {
-    const path = getBooruParam('imageApiPath') + id;
+    const path = window.location.origin + getBooruParam('imageApiPath') + id;
     const json = await fetch(path).then(resp => resp.json());
     const metadata = 'image' in json ? json.image : json.post;
     return new Set(metadata.tags);
@@ -454,7 +454,7 @@
     setAllHeader(false);
   }
   async function submitEdit(id, oldTags, newTags) {
-    const path = getBooruParam('editApiPath') + id + '/tags';
+    const path = window.location.origin + getBooruParam('editApiPath') + id + '/tags';
     const formEntries = [
       ['_method', 'put'],
       [getBooruParam('authTokenParam'), getToken()],

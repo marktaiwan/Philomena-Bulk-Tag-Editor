@@ -229,7 +229,7 @@ async function bulkApplyTags(tagsToAdd: string[], tagsToRemove: string[]): Promi
 }
 
 async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>): Promise<void> {
-  const path = getBooruParam('editApiPath') + id + '/tags';
+  const path = window.location.origin + getBooruParam('editApiPath') + id + '/tags';
   const formEntries = [
     ['_method', 'put'],
     [getBooruParam('authTokenParam'), getToken()],
