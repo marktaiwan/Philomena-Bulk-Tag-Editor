@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.3
+// @version     1.1.4
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -60,7 +60,7 @@
   }
   function onLeftClick(callback, root = document) {
     root.addEventListener('click', e => {
-      if (e instanceof PointerEvent && e.button === 0) callback(e);
+      if (e instanceof MouseEvent && e.button === 0) callback(e);
     });
   }
 

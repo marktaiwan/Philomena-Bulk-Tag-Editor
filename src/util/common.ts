@@ -78,9 +78,9 @@ function sleep(duration: number): Promise<void> {
   return new Promise(resolve => window.setTimeout(resolve, duration));
 }
 
-function onLeftClick(callback: (event: PointerEvent) => void, root: SelectorRoot = document): void {
+function onLeftClick(callback: (event: MouseEvent) => void, root: SelectorRoot = document): void {
   root.addEventListener('click', e => {
-    if (e instanceof PointerEvent && e.button === 0) callback(e);
+    if (e instanceof MouseEvent && e.button === 0) callback(e);
   });
 }
 
