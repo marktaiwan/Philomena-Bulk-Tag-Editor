@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor (FF Violentmonkey)
 // @description Streamlined bulk tag editing
-// @version     1.1.4
+// @version     1.1.5
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -34,7 +34,10 @@
   const boorus = {
     derpibooru: booruDefault,
     ponybooru: booruDefault,
-    ponerpics: booruDefault,
+    ponerpics: {
+      ...booruDefault,
+      imagelistSelector: '#imagelist-container section.block__header',
+    },
     twibooru: {
       ...booruDefault,
       acSource: '/tags/autocomplete.json?term=',
