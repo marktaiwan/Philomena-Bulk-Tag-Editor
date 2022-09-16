@@ -30,7 +30,10 @@ const booruDefault: BooruData = {
 const boorus: Record<BooruKeys, Readonly<BooruData>> = {
   derpibooru: booruDefault,
   ponybooru: booruDefault,
-  ponerpics: booruDefault,
+  ponerpics: {
+    ...booruDefault,
+    imagelistSelector: '#imagelist-container section.block__header',
+  },
   twibooru: {
     ...booruDefault,
     acSource: '/tags/autocomplete.json?term=',
