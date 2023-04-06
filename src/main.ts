@@ -282,7 +282,7 @@ function createButton(text: string, id: string): HTMLButtonElement {
   return button;
 }
 
-if ($('#image_target') || $('#thumbnails-not-yet-generated')) {
+if ($('#image_target, .image-target') || $('#thumbnails-not-yet-generated')) {
   insertUI();
 
   const content = $('#content');

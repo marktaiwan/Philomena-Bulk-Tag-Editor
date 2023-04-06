@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.5
+// @version     1.1.6
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -496,7 +496,7 @@
     button.innerText = text;
     return button;
   }
-  if ($('#image_target') || $('#thumbnails-not-yet-generated')) {
+  if ($('#image_target, .image-target') || $('#thumbnails-not-yet-generated')) {
     insertUI();
     const content = $('#content');
     if (!content) throw Error('Element not found: #content');
