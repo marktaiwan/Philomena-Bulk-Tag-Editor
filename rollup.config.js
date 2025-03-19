@@ -10,7 +10,7 @@ import replace from '@rollup/plugin-replace';
 import typescriptPlugin from '@rollup/plugin-typescript';
 import typescript from 'typescript';
 
-import pkg from './package.json' assert {type: 'json'};
+import pkg from './package.json' with {type: 'json'};
 
 const entryName = 'main';
 const tsEntry = `./src/${entryName}.ts`;
@@ -53,10 +53,10 @@ export default args => {
       typescriptPlugin({typescript}),
       commonjs({
         include: [
-          'node_modules/**'
+          'node_modules/**',
         ],
         exclude: [
-          'node_modules/process-es6/**'
+          'node_modules/process-es6/**',
         ]
       }),
       babel({babelHelpers: 'bundled'}),

@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
         "strict": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "removeComments": false,
-        "target": "ES2020",
+        "target": "ESNext",
         "moduleResolution": "node",
         "esModuleInterop": true,
         "jsx": "react",
-        "module": "es6",
+        "module": "esnext",
         "typeRoots": [
             "./types",
             "./node_modules/@types",
