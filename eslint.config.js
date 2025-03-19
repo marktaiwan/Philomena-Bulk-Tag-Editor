@@ -51,12 +51,14 @@ export default [
       }],
       '@stylistic/comma-dangle': ['warn', {
         'arrays': 'always-multiline',
-        'objects': 'only-multiline',
-        'imports': 'always-multiline',
+        'dynamicImports': 'always-multiline',
+        'enums': 'always-multiline',
         'exports': 'always-multiline',
         'functions': 'only-multiline',
         'importAttributes': 'always-multiline',
-        'dynamicImports': 'always-multiline',
+        'imports': 'always-multiline',
+        'objects': 'only-multiline',
+        'tuples': 'always-multiline'
       }],
       '@stylistic/comma-spacing': 'error',
       '@stylistic/dot-location': [
@@ -124,7 +126,14 @@ export default [
       '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/consistent-indexed-object-style': 'off',
       '@typescript-eslint/no-explicit-any': ['error', {'ignoreRestArgs': true}],
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        'args': 'all',
+        'argsIgnorePattern': '^_',
+        'caughtErrors': 'all',
+        'caughtErrorsIgnorePattern': '^_',
+        'destructuredArrayIgnorePattern': '^_',
+        'varsIgnorePattern': '^_',
+      }],
       '@typescript-eslint/no-inferrable-types': ['warn', {
         'ignoreParameters': true,
         'ignoreProperties': true,

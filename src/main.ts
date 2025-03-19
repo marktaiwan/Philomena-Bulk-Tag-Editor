@@ -216,7 +216,7 @@ async function bulkApplyTags(tagsToAdd: string[], tagsToRemove: string[]): Promi
       tagsToRemove.forEach(tag => newTags.delete(tag));
 
       await throttle(submitEdit, id, oldTags, newTags);
-    } catch (err) {
+    } catch (_err) {
       errors += 1;
     } finally {
       setMessage(`Progress: ${++done}/${total}`);
