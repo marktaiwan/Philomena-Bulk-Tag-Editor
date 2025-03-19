@@ -57,9 +57,8 @@ class TagEditor {
     [
       ['autocapitalize', 'none'],
       ['autocomplete', 'off'],
-      ['data-ac', 'true'],
-      ['data-ac-min-length', '3'],
-      ['data-ac-source', getBooruParam('acSource')],
+      ['data-autocomplete', 'single-tag'],
+      ['data-autocomplete-max-suggestions', '5'],
       ['placeholder', 'add a tag'],
       ['type', 'text'],
     ].forEach(([attr, val]) => input.setAttribute(attr, val));
@@ -67,10 +66,12 @@ class TagEditor {
     fancyEditor.append(input);
 
     const br = create('br');
-    wrapper.appendChild(span);
-    wrapper.appendChild(br);
-    wrapper.appendChild(textarea);
-    wrapper.appendChild(fancyEditor);
+    wrapper.append(
+      span,
+      br,
+      textarea,
+      fancyEditor,
+    );
 
     this.dom = wrapper;
     this.plainEditor = textarea;
@@ -89,7 +90,7 @@ class TagEditor {
     });
     this.inputField.addEventListener('autocomplete', e => {
       if (!(e instanceof CustomEvent)) return;
-      this.addTag(e.detail.value);
+      this.addTag(e.detail.value ?? e.detail);
       this.inputField.focus();
       this.inputField.value = '';
     });

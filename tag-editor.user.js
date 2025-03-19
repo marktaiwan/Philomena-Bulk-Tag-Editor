@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.6
+// @version     1.1.7
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -18,6 +18,7 @@
 // @grant       GM_getValue
 // @grant       GM_setValue
 // ==/UserScript==
+
 (function () {
   'use strict';
 
@@ -135,6 +136,13 @@
   }
 
   class TagEditor {
+    id;
+    label;
+    dom;
+    plainEditor;
+    fancyEditor;
+    inputField;
+    tags;
     constructor(label, id) {
       this.id = SCRIPT_ID + '--' + id;
       this.label = label;
@@ -154,7 +162,7 @@
         'tagsinput',
         'js-taginput',
         'js-taginput-plain',
-        `${SCRIPT_ID}_textarea`
+        `${SCRIPT_ID}_textarea`,
       );
       textarea.style.marginTop = '4px';
       textarea.style.resize = 'vertical';
@@ -164,7 +172,7 @@
         'input--wide',
         'tagsinput',
         'js-taginput',
-        'js-taginput-fancy'
+        'js-taginput-fancy',
       );
       fancyEditor.style.marginTop = '4px';
       fancyEditor.style.resize = 'vertical';
@@ -173,18 +181,14 @@
       [
         ['autocapitalize', 'none'],
         ['autocomplete', 'off'],
-        ['data-ac', 'true'],
-        ['data-ac-min-length', '3'],
-        ['data-ac-source', getBooruParam('acSource')],
+        ['data-autocomplete', 'single-tag'],
+        ['data-autocomplete-max-suggestions', '5'],
         ['placeholder', 'add a tag'],
         ['type', 'text'],
       ].forEach(([attr, val]) => input.setAttribute(attr, val));
       fancyEditor.append(input);
       const br = create('br');
-      wrapper.appendChild(span);
-      wrapper.appendChild(br);
-      wrapper.appendChild(textarea);
-      wrapper.appendChild(fancyEditor);
+      wrapper.append(span, br, textarea, fancyEditor);
       this.dom = wrapper;
       this.plainEditor = textarea;
       this.fancyEditor = fancyEditor;
@@ -200,7 +204,7 @@
       });
       this.inputField.addEventListener('autocomplete', e => {
         if (!(e instanceof CustomEvent)) return;
-        this.addTag(e.detail.value);
+        this.addTag(e.detail.value ?? e.detail);
         this.inputField.focus();
         this.inputField.value = '';
       });
@@ -313,7 +317,7 @@
     onLeftClick(() => {
       applyTags(
         deserializeTags(tagAdd.plainEditor.value),
-        deserializeTags(tagRemove.plainEditor.value)
+        deserializeTags(tagRemove.plainEditor.value),
       );
     }, applyButton);
     onLeftClick(() => {
@@ -358,7 +362,7 @@
       applyButton.disabled = true;
       await bulkApplyTags(
         deserializeTags(tagAdd.plainEditor.value),
-        deserializeTags(tagRemove.plainEditor.value)
+        deserializeTags(tagRemove.plainEditor.value),
       );
       applyButton.disabled = false;
     }, applyButton);
@@ -385,7 +389,7 @@
     } else {
       document.removeEventListener('click', boxClickHandler);
       getBoxHeaders().forEach(header =>
-        header.classList.remove('media-box__header--selected', 'media-box__header--unselected')
+        header.classList.remove('media-box__header--selected', 'media-box__header--unselected'),
       );
     }
   }
@@ -417,7 +421,7 @@
     anchor.dataset.clickPreventdefault = 'true';
     anchor.innerText = text;
     anchor.classList.add(className);
-    if (icon) {
+    {
       const i = create('i');
       i.classList.add('fa', icon);
       anchor.prepend(i, ' ');
