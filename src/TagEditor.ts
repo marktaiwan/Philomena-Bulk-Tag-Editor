@@ -1,5 +1,5 @@
 import {SCRIPT_ID} from './globals';
-import {$, $$, create, serializeTags, deserializeTags, getBooruParam} from './util';
+import {$, $$, create, serializeTags, deserializeTags} from './util';
 
 
 class TagEditor {
