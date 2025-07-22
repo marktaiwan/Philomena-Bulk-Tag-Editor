@@ -14,6 +14,6 @@
         "GM_getValue",
         "GM_setValue"
     ],
-    "inject-into": "page",
+    "inject-into": "content",
     "noframes": true
 }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.7
+// @version     1.1.8
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -13,7 +13,7 @@
 // @match       *://*.ponerpics.org/*
 // @match       *://*.ponerpics.com/*
 // @match       *://*.twibooru.org/*
-// @inject-into page
+// @inject-into content
 // @noframes
 // @grant       GM_getValue
 // @grant       GM_setValue
