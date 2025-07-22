@@ -1,12 +1,11 @@
+import {defineConfig} from 'eslint/config';
 import globals from 'globals';
-import eslint from '@eslint/js';
+import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+export default defineConfig([
   {
-    name: 'language-options',
     languageOptions: {
       ecmaVersion: 'latest',
       globals: {
@@ -15,12 +14,23 @@ export default [
       },
     },
     plugins: {
+      js,
       '@stylistic': stylistic,
-    }
-  },
-  {
-    name: 'eslint/recommended',
-    ...eslint.configs.recommended,
+    },
+    extends: [
+      'js/recommended',
+      stylistic.configs.customize({
+        arrowParens: false,
+        blockSpacing: true,
+        braceStyle: '1tbs',
+        indent: 2,
+        jsx: false,
+        quoteProps: 'consistent',
+        quotes: 'single',
+        semi: true,
+        severity: 'warn',
+      }),
+    ],
   },
   {
     name: 'my-rules',
@@ -36,7 +46,6 @@ export default [
       'no-undef': 'warn',
       'no-unreachable': 'error',
       'no-unused-expressions': 'warn',
-      'no-unused-vars': 'warn',
       'prefer-const': 'warn',
       'prefer-spread': 'warn',
       'valid-typeof': 'warn',
@@ -45,10 +54,7 @@ export default [
   {
     name: 'my-stylistic-rules',
     rules: {
-      '@stylistic/arrow-spacing': ['warn', {
-        'before': true,
-        'after': true,
-      }],
+      '@stylistic/arrow-parens': ['warn', 'as-needed', {requireForBlockBody: false}],
       '@stylistic/comma-dangle': ['warn', {
         'arrays': 'always-multiline',
         'dynamicImports': 'always-multiline',
@@ -58,27 +64,39 @@ export default [
         'importAttributes': 'always-multiline',
         'imports': 'always-multiline',
         'objects': 'only-multiline',
-        'tuples': 'always-multiline'
+        'tuples': 'always-multiline',
       }],
-      '@stylistic/comma-spacing': 'error',
-      '@stylistic/dot-location': [
-        'error',
-        'property',
-      ],
-      '@stylistic/eol-last': 'error',
+      '@stylistic/function-call-spacing': ['warn', 'never'],
       '@stylistic/indent': ['error', 2, {
-        'SwitchCase': 1,
-        'VariableDeclarator': 'first',
-        'ignoreComments': true,
-        'MemberExpression': 'off',
-        'outerIIFEBody': 'off',
+        'ArrayExpression': 1,
+        'CallExpression': {arguments: 1},
         'flatTernaryExpressions': true,
+        'FunctionDeclaration': {body: 1, parameters: 1, returnType: 1},
+        'FunctionExpression': {body: 1, parameters: 1, returnType: 1},
+        'ignoreComments': true,
+        'ignoredNodes': [
+          'TSUnionType',
+          'TSIntersectionType',
+          'TSTypeParameterInstantiation',
+          'FunctionExpression > .params[decorators.length > 0]',
+          'FunctionExpression > .params > :matches(Decorator, :not(:first-child))',
+        ],
+        'ImportDeclaration': 1,
+        'MemberExpression': 1,
+        'ObjectExpression': 1,
+        'offsetTernaryExpressions': false,
+        'outerIIFEBody': 'off',
+        'SwitchCase': 1,
+        'tabLength': 2,
+        'VariableDeclarator': 'first',
       }],
       '@stylistic/key-spacing': ['error', {
         'afterColon': true,
+        'beforeColon': false,
         'mode': 'minimum',
       }],
-      '@stylistic/keyword-spacing': ['error', {'before': true, 'after': true}],
+      '@stylistic/lines-between-class-members': 'off',
+      '@stylistic/max-statements-per-line': 'off',
       '@stylistic/lines-around-comment': ['warn', {
         'beforeBlockComment': false,
         'beforeLineComment': false,
@@ -95,30 +113,24 @@ export default [
         },
         'multilineDetection': 'brackets',
       }],
-      '@stylistic/no-extra-semi': 'error',
-      '@stylistic/no-mixed-spaces-and-tabs': 'error',
+      '@stylistic/multiline-ternary': 'off',
+      '@stylistic/no-extra-semi': 'warn',
       '@stylistic/no-multi-spaces': ['warn', {ignoreEOLComments: true}],
-      '@stylistic/no-trailing-spaces': 'error',
+      '@stylistic/no-multiple-empty-lines': ['warn', {max: 2, maxBOF: 0, maxEOF: 0}],
       '@stylistic/object-curly-spacing': ['warn', 'never'],
+      '@stylistic/padded-blocks': 'off',
       '@stylistic/quotes': ['error', 'single', {avoidEscape: true}],
-      '@stylistic/semi': ['warn', 'always'],
-      '@stylistic/semi-spacing': ['warn', {after: true}],
-      '@stylistic/space-before-function-paren': ['error', {
-        anonymous: 'always',
-        named: 'never',
-        asyncArrow: 'always',
-      }],
-      '@stylistic/space-infix-ops': 'warn',
-      '@stylistic/spaced-comment': ['warn', 'always'],
-      '@stylistic/wrap-iife': ['warn', 'inside'],
+      '@stylistic/switch-colon-spacing': 'warn',
+      '@stylistic/wrap-iife': ['warn', 'inside', {functionPrototypeMethods: true}],
       '@stylistic/wrap-regex': 'warn',
     },
   },
-  ...tseslint.configs.recommended,
-  ...tseslint.configs.stylistic,
   {
     name: 'my-rules-ts',
-    files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    extends: [
+      tseslint.configs.recommended,
+      tseslint.configs.stylistic,
+    ],
     rules: {
       '@typescript-eslint/array-type': ['error', {
         'default': 'array-simple'
@@ -133,6 +145,7 @@ export default [
         'caughtErrorsIgnorePattern': '^_',
         'destructuredArrayIgnorePattern': '^_',
         'varsIgnorePattern': '^_',
+        'ignoreRestSiblings': true,
       }],
       '@typescript-eslint/no-inferrable-types': ['warn', {
         'ignoreParameters': true,
@@ -141,4 +154,4 @@ export default [
       '@typescript-eslint/prefer-for-of': 'off',
     }
   },
-];
+]);

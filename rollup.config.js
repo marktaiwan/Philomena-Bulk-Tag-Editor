@@ -46,8 +46,8 @@ export default args => {
     plugins: [
       replace({
         'process.env.NODE_ENV': JSON.stringify('production'),
-        ENVIRONMENT: JSON.stringify('production'),
-        preventAssignment: true
+        'ENVIRONMENT': JSON.stringify('production'),
+        'preventAssignment': true
       }),
       nodeResolve({extensions: ['.js', '.ts', '.tsx']}),
       typescriptPlugin({typescript}),
