@@ -112,6 +112,18 @@ export default defineConfig([
           'requireLast': false,
         },
         'multilineDetection': 'brackets',
+        'overrides': {
+          'typeLiteral': {
+            'multiline': {
+              'delimiter': 'comma',
+              'requireLast': true,
+            },
+            'singleline': {
+              'delimiter': 'comma',
+              'requireLast': false,
+            },
+          },
+        },
       }],
       '@stylistic/multiline-ternary': 'off',
       '@stylistic/no-extra-semi': 'warn',

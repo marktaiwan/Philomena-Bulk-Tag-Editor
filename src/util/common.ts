@@ -29,7 +29,7 @@ function makeAbsolute(path: string, domain: string): string {
 }
 
 type QueryVariableSet = {
-  [key: string]: string;
+  [key: string]: string,
 };
 function getQueryVariableAll(): QueryVariableSet {
   const params = new URLSearchParams(window.location.search);

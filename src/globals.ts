@@ -6,14 +6,14 @@ type BooruKeys = [
 ][number];
 
 type BooruData = {
-  cooldown: number;
-  acSource: string;
-  editApiPath: string;
-  imageApiPath: string;
-  authTokenParam: string;
-  oldTagParam: string;
-  newTagParam: string;
-  imagelistSelector: string;
+  cooldown: number,
+  acSource: string,
+  editApiPath: string,
+  imageApiPath: string,
+  authTokenParam: string,
+  oldTagParam: string,
+  newTagParam: string,
+  imagelistSelector: string,
 };
 
 const SCRIPT_ID = 'bulk_tag_editor';
