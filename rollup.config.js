@@ -18,6 +18,11 @@ const jsEntry = `./src/${entryName}.js`;
 const defaultEntryPath = fs.existsSync(tsEntry) ? tsEntry : jsEntry;
 
 export default args => {
+
+  /**
+   * Include `--input inputFile.js` in the build or watch command
+   * to enable simple mode.
+   */
   args.i ??= args.input;
   const simple = Boolean(args.i);
   const inputFile = {...path.parse(args.i ?? defaultEntryPath), base: ''};

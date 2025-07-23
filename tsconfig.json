@@ -3,7 +3,7 @@
         "strict": true,
         "noImplicitAny": true,
         "removeComments": false,
-        "target": "ESNext",
+        "target": "esnext",
         "moduleResolution": "node",
         "esModuleInterop": true,
         "jsx": "react",
@@ -13,7 +13,8 @@
             "./node_modules/@types",
             "./typings.d.ts"
         ],
-        "declaration": false
+        "declaration": false,
+        "resolveJsonModule": true
     },
     "exclude": [
         "node_modules"
