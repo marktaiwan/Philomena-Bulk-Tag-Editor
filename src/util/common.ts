@@ -1,5 +1,6 @@
 /* Shorthands  */
 
+type HTMLElementEvent<T extends HTMLElement = HTMLElement> = Event & {target: T};
 type SelectorRoot = Document | HTMLElement;
 
 function $<K extends keyof HTMLElementTagNameMap>(selector: K, root?: SelectorRoot): HTMLElementTagNameMap[K] | null;
@@ -40,8 +41,11 @@ function getQueryVariableAll(): QueryVariableSet {
   return dict;
 }
 
-function getQueryVariable(key: string): string {
-  return getQueryVariableAll()[key];
+function getQueryVariable(key: string): string | undefined {
+  const variables = getQueryVariableAll();
+  return Object.prototype.hasOwnProperty.call(variables, key)
+    ? variables[key]
+    : undefined;
 }
 
 function makeQueryString(queries: QueryVariableSet): string {
@@ -53,24 +57,33 @@ function escapeRegExp(str: string): string {
   return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
 
-function onReadyFactory(): (fn: () => void) => void {
-  const callbacks: Array<() => void> = [];
-  document.addEventListener('DOMContentLoaded', () => callbacks.forEach(fn => fn()), {once: true});
-  return (fn): void => {
-    if (document.readyState == 'complete') {
-      fn();
-    } else {
-      callbacks.push(fn);
-    }
+function debounce<T extends (...args: any[]) => ReturnType<T>>(
+  fn: T,
+  delay: number
+): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+  let timer: ReturnType<typeof setTimeout>;
+  let latestPromise: {resolve: (value: ReturnType<T>) => void} | null = null;
+
+  return (...args) => {
+    // Cancel the previous execution
+    clearTimeout(timer);
+
+    return new Promise<ReturnType<T>>(resolve => {
+      latestPromise = {resolve}; // Store the latest resolve function
+
+      timer = setTimeout(() => {
+        if (latestPromise) {
+          latestPromise.resolve(fn(...args)); // Only resolve the most recent call
+          latestPromise = null;
+        }
+      }, delay);
+    });
   };
 }
 
-function debounce(fn: (...args: unknown[]) => unknown, delay: number): (...args: unknown[]) => void {
-  let timeout: number;
-  return (...args: unknown[]) => {
-    window.clearTimeout(timeout);
-    timeout = window.setTimeout(fn, delay, ...args);
-  };
+function removeFromArray<T>(array: T[], predicate: (ele: T, index: number, arr: T[]) => unknown, thisArg?: unknown): void {
+  const index = array.findIndex(predicate, thisArg);
+  if (index > -1) array.splice(index, 1);
 }
 
 function sleep(duration: number): Promise<void> {
@@ -87,13 +100,16 @@ export {
   $,
   $$,
   create,
-  makeAbsolute,
+  debounce,
+  escapeRegExp,
   getQueryVariable,
   getQueryVariableAll,
+  makeAbsolute,
   makeQueryString,
-  escapeRegExp,
-  onReadyFactory,
-  debounce,
-  sleep,
   onLeftClick,
+  removeFromArray,
+  sleep,
+};
+export type {
+  HTMLElementEvent,
 };
