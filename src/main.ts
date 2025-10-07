@@ -133,7 +133,7 @@ function insertBulkUI(): void {
   editor.style.marginTop = '10px';
   editor.classList.add('layout--narrow', 'hidden');
   imageListHeader.append(toggleButton);
-  imageListHeader.after(editor);
+  imageListHeader.parentElement.after(editor);
 }
 
 function toggleUI(): void {
