@@ -182,12 +182,17 @@ function createAnchorButton(text: string, className: string, icon?: string) {
   const anchor = create('a');
   anchor.href = '#';
   anchor.dataset.clickPreventdefault = 'true';
-  anchor.innerText = text;
   anchor.classList.add(className);
-  if (icon) {
+  if (!icon) {
+    anchor.innerText = text;
+  } else {
+    anchor.title = text;
+    const textSpan = create('span');
+    textSpan.innerText = text;
+    textSpan.classList.add('hide-mobile', 'hide-limited-desktop');
     const i = create('i');
     i.classList.add('fa', icon);
-    anchor.prepend(i, ' ');
+    anchor.replaceChildren(i, ' ', textSpan);
   }
   return anchor;
 }
