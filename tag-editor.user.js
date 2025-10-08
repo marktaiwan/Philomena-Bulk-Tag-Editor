@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.8
+// @version     1.1.9
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -31,15 +31,12 @@
     authTokenParam: '_csrf_token',
     oldTagParam: 'image[old_tag_input]',
     newTagParam: 'image[tag_input]',
-    imagelistSelector: '#imagelist-container section.page__header',
+    imagelistSelector: '#imagelist-container > section.block__header > div.flex__right',
   };
   const boorus = {
     derpibooru: booruDefault,
     ponybooru: booruDefault,
-    ponerpics: {
-      ...booruDefault,
-      imagelistSelector: '#imagelist-container section.block__header',
-    },
+    ponerpics: booruDefault,
     twibooru: {
       ...booruDefault,
       acSource: '/tags/autocomplete.json?term=',
@@ -48,7 +45,7 @@
       authTokenParam: 'authenticity_token',
       oldTagParam: 'post[old_tag_list]',
       newTagParam: 'post[tag_input]',
-      imagelistSelector: '#imagelist_container section.block__header',
+      imagelistSelector: '#imagelist_container > section.block__header > div.flex__right',
     },
   };
 
@@ -377,7 +374,7 @@
     editor.style.marginTop = '10px';
     editor.classList.add('layout--narrow', 'hidden');
     imageListHeader.append(toggleButton);
-    imageListHeader.after(editor);
+    imageListHeader.parentElement.after(editor);
   }
   function toggleUI() {
     const editor = $(`#${SCRIPT_ID}_script_container`);
@@ -419,12 +416,15 @@
     const anchor = create('a');
     anchor.href = '#';
     anchor.dataset.clickPreventdefault = 'true';
-    anchor.innerText = text;
     anchor.classList.add(className);
     {
+      anchor.title = text;
+      const textSpan = create('span');
+      textSpan.innerText = text;
+      textSpan.classList.add('hide-mobile', 'hide-limited-desktop');
       const i = create('i');
       i.classList.add('fa', icon);
-      anchor.prepend(i, ' ');
+      anchor.replaceChildren(i, ' ', textSpan);
     }
     return anchor;
   }

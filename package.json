@@ -1,7 +1,7 @@
 {
     "displayName": "Bulk Tag Editor",
     "name": "tag-editor",
-    "version": "1.1.8",
+    "version": "1.1.9",
     "description": "Streamlined bulk tag editing",
     "private": true,
     "author": "Marker",
