@@ -25,15 +25,12 @@ const booruDefault: BooruData = {
   authTokenParam: '_csrf_token',
   oldTagParam: 'image[old_tag_input]',
   newTagParam: 'image[tag_input]',
-  imagelistSelector: '#imagelist-container section.page__header',
+  imagelistSelector: '#imagelist-container > section.block__header > div.flex__right',
 };
 const boorus: Record<BooruKeys, Readonly<BooruData>> = {
   derpibooru: booruDefault,
   ponybooru: booruDefault,
-  ponerpics: {
-    ...booruDefault,
-    imagelistSelector: '#imagelist-container section.block__header',
-  },
+  ponerpics: booruDefault,
   twibooru: {
     ...booruDefault,
     acSource: '/tags/autocomplete.json?term=',
@@ -42,7 +39,7 @@ const boorus: Record<BooruKeys, Readonly<BooruData>> = {
     authTokenParam: 'authenticity_token',
     oldTagParam: 'post[old_tag_list]',
     newTagParam: 'post[tag_input]',
-    imagelistSelector: '#imagelist_container section.block__header',
+    imagelistSelector: '#imagelist_container > section.block__header > div.flex__right',
   },
 };
 
