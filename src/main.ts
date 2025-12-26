@@ -233,7 +233,7 @@ async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>
   const path = window.location.origin + getBooruParam('editApiPath') + id + '/tags';
   const formEntries = [
     ['_method', 'put'],
-    [getBooruParam('authTokenParam'), getToken()],
+    [authTokenParam, getToken()],
     [getBooruParam('oldTagParam'), serializeTags(oldTags)],
     [getBooruParam('newTagParam'), serializeTags(newTags)],
   ];
@@ -282,6 +282,8 @@ function createButton(text: string, id: string): HTMLButtonElement {
 
   return button;
 }
+
+const authTokenParam = $('meta[name="csrf-param"]')?.content ?? '_csrf_token';
 
 if ($('#image_target, .image-target') || $('#thumbnails-not-yet-generated')) {
   insertUI();
