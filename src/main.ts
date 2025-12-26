@@ -139,23 +139,18 @@ function insertBulkUI(): void {
 
 function toggleUI(): void {
   const editor = $(`#${SCRIPT_ID}_script_container`)!;
-  const active = editorOn();
-  editor.classList.toggle('hidden', active);
+  const active = editor.classList.toggle('hidden');
+  const list = $('#imagelist-container, #imagelist_container');
   if (!active) {
-    document.addEventListener('click', boxClickHandler);
-    getBoxHeaders().forEach(header => header.classList.add('media-box__header--unselected'));
+    list.addEventListener('click', boxClickHandler);
+    list.getElementsByClassName('media-box__header').forEach(header => header.classList.add('media-box__header--unselected'));
   } else {
-    document.removeEventListener('click', boxClickHandler);
-    getBoxHeaders().forEach(header => header.classList.remove(
+    list.removeEventListener('click', boxClickHandler);
+    list.getElementsByClassName('media-box__header').forEach(header => header.classList.remove(
       'media-box__header--selected',
-      'media-box__header--unselected',
+      'media-box__header--unselected'
     ));
   }
-}
-
-function editorOn(): boolean {
-  const editor = $(`#${SCRIPT_ID}_script_container`)!;
-  return !editor.classList.contains('hidden');
 }
 
 /**
