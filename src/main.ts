@@ -91,6 +91,7 @@ function insertBulkUI(): void {
   if (!imageListHeader) return;
 
   const toggleButton = createAnchorButton('Tag Edit', `js--${SCRIPT_ID}--toggle`, 'fa-tags');
+  toggleButton.accessKey = 't';
   onLeftClick(toggleUI, toggleButton);
 
   const editor = createTagEditor();
