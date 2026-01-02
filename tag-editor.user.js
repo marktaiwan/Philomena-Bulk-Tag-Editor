@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Bulk Tag Editor
 // @description Streamlined bulk tag editing
-// @version     1.1.9
+// @version     1.2.0
 // @author      Marker
 // @license     MIT
 // @namespace   https://github.com/marktaiwan/
@@ -28,7 +28,6 @@
     acSource: '/autocomplete/tags?term=',
     editApiPath: '/images/',
     imageApiPath: '/api/v1/json/images/',
-    authTokenParam: '_csrf_token',
     oldTagParam: 'image[old_tag_input]',
     newTagParam: 'image[tag_input]',
     imagelistSelector: '#imagelist-container > section.block__header > div.flex__right',
@@ -42,7 +41,6 @@
       acSource: '/tags/autocomplete.json?term=',
       editApiPath: '/posts/',
       imageApiPath: '/api/v3/posts/',
-      authTokenParam: 'authenticity_token',
       oldTagParam: 'post[old_tag_list]',
       newTagParam: 'post[tag_input]',
       imagelistSelector: '#imagelist_container > section.block__header > div.flex__right',
@@ -338,6 +336,7 @@
     const imageListHeader = $(getBooruParam('imagelistSelector'));
     if (!imageListHeader) return;
     const toggleButton = createAnchorButton('Tag Edit', `js--${SCRIPT_ID}--toggle`, 'fa-tags');
+    toggleButton.accessKey = 't';
     onLeftClick(toggleUI, toggleButton);
     const editor = createTagEditor();
     const inputField = $(`#${SCRIPT_ID}_input_field`, editor);
@@ -378,21 +377,22 @@
   }
   function toggleUI() {
     const editor = $(`#${SCRIPT_ID}_script_container`);
-    const active = editorOn();
-    editor.classList.toggle('hidden', active);
+    const active = editor.classList.toggle('hidden');
+    const list = $('#imagelist-container, #imagelist_container');
+    if (!list) {
+      throw Error('Element not found: #imagelist-container, #imagelist_container');
+    }
     if (!active) {
-      document.addEventListener('click', boxClickHandler);
-      getBoxHeaders().forEach(header => header.classList.add('media-box__header--unselected'));
+      list.addEventListener('click', boxClickHandler);
+      $$('.media-box__header', list).forEach(header =>
+        header.classList.add('media-box__header--unselected'),
+      );
     } else {
-      document.removeEventListener('click', boxClickHandler);
-      getBoxHeaders().forEach(header =>
+      list.removeEventListener('click', boxClickHandler);
+      $$('.media-box__header', list).forEach(header =>
         header.classList.remove('media-box__header--selected', 'media-box__header--unselected'),
       );
     }
-  }
-  function editorOn() {
-    const editor = $(`#${SCRIPT_ID}_script_container`);
-    return !editor.classList.contains('hidden');
   }
   /**
    * Handles toggling the selected state of thumbnails when script is active
@@ -461,10 +461,11 @@
     setAllHeader(false);
   }
   async function submitEdit(id, oldTags, newTags) {
+    const authTokenParam = $('meta[name="csrf-param"]')?.content ?? '_csrf_token';
     const path = window.location.origin + getBooruParam('editApiPath') + id + '/tags';
     const formEntries = [
       ['_method', 'put'],
-      [getBooruParam('authTokenParam'), getToken()],
+      [authTokenParam, getToken()],
       [getBooruParam('oldTagParam'), serializeTags(oldTags)],
       [getBooruParam('newTagParam'), serializeTags(newTags)],
     ];
