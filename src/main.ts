@@ -141,6 +141,9 @@ function toggleUI(): void {
   const editor = $(`#${SCRIPT_ID}_script_container`)!;
   const active = editor.classList.toggle('hidden');
   const list = $('#imagelist-container, #imagelist_container');
+  if (!list) {
+    throw Error('Element not found: #imagelist-container, #imagelist_container');
+  }
   if (!active) {
     list.addEventListener('click', boxClickHandler);
     list.getElementsByClassName('media-box__header').forEach(header => header.classList.add('media-box__header--unselected'));
@@ -283,7 +286,7 @@ function createButton(text: string, id: string): HTMLButtonElement {
   return button;
 }
 
-const authTokenParam = $('meta[name="csrf-param"]')?.content ?? '_csrf_token';
+const authTokenParam = $<HTMLMetaElement>('meta[name="csrf-param"]')?.content ?? '_csrf_token';
 
 if ($('#image_target, .image-target') || $('#thumbnails-not-yet-generated')) {
   insertUI();
