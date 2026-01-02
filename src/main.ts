@@ -233,6 +233,7 @@ async function bulkApplyTags(tagsToAdd: string[], tagsToRemove: string[]): Promi
 }
 
 async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>): Promise<void> {
+  const authTokenParam = $<HTMLMetaElement>('meta[name="csrf-param"]')?.content ?? '_csrf_token';
   const path = window.location.origin + getBooruParam('editApiPath') + id + '/tags';
   const formEntries = [
     ['_method', 'put'],
@@ -285,8 +286,6 @@ function createButton(text: string, id: string): HTMLButtonElement {
 
   return button;
 }
-
-const authTokenParam = $<HTMLMetaElement>('meta[name="csrf-param"]')?.content ?? '_csrf_token';
 
 if ($('#image_target, .image-target') || $('#thumbnails-not-yet-generated')) {
   insertUI();
