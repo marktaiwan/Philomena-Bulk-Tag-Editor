@@ -146,10 +146,10 @@ function toggleUI(): void {
   }
   if (!active) {
     list.addEventListener('click', boxClickHandler);
-    list.getElementsByClassName('media-box__header').forEach(header => header.classList.add('media-box__header--unselected'));
+    $$('.media-box__header', list).forEach(header => header.classList.add('media-box__header--unselected'));
   } else {
     list.removeEventListener('click', boxClickHandler);
-    list.getElementsByClassName('media-box__header').forEach(header => header.classList.remove(
+    $$('.media-box__header', list).forEach(header => header.classList.remove(
       'media-box__header--selected',
       'media-box__header--unselected'
     ));
