@@ -91,6 +91,7 @@ function insertBulkUI(): void {
   if (!imageListHeader) return;
 
   const toggleButton = createAnchorButton('Tag Edit', `js--${SCRIPT_ID}--toggle`, 'fa-tags');
+  toggleButton.accessKey = 't';
   onLeftClick(toggleUI, toggleButton);
 
   const editor = createTagEditor();
@@ -138,23 +139,18 @@ function insertBulkUI(): void {
 
 function toggleUI(): void {
   const editor = $(`#${SCRIPT_ID}_script_container`)!;
-  const active = editorOn();
-  editor.classList.toggle('hidden', active);
+  const active = editor.classList.toggle('hidden');
+  const list = $('#imagelist-container, #imagelist_container');
   if (!active) {
-    document.addEventListener('click', boxClickHandler);
-    getBoxHeaders().forEach(header => header.classList.add('media-box__header--unselected'));
+    list.addEventListener('click', boxClickHandler);
+    list.getElementsByClassName('media-box__header').forEach(header => header.classList.add('media-box__header--unselected'));
   } else {
-    document.removeEventListener('click', boxClickHandler);
-    getBoxHeaders().forEach(header => header.classList.remove(
+    list.removeEventListener('click', boxClickHandler);
+    list.getElementsByClassName('media-box__header').forEach(header => header.classList.remove(
       'media-box__header--selected',
-      'media-box__header--unselected',
+      'media-box__header--unselected'
     ));
   }
-}
-
-function editorOn(): boolean {
-  const editor = $(`#${SCRIPT_ID}_script_container`)!;
-  return !editor.classList.contains('hidden');
 }
 
 /**
@@ -237,7 +233,7 @@ async function submitEdit(id: string, oldTags: Set<string>, newTags: Set<string>
   const path = window.location.origin + getBooruParam('editApiPath') + id + '/tags';
   const formEntries = [
     ['_method', 'put'],
-    [getBooruParam('authTokenParam'), getToken()],
+    [authTokenParam, getToken()],
     [getBooruParam('oldTagParam'), serializeTags(oldTags)],
     [getBooruParam('newTagParam'), serializeTags(newTags)],
   ];
@@ -286,6 +282,8 @@ function createButton(text: string, id: string): HTMLButtonElement {
 
   return button;
 }
+
+const authTokenParam = $('meta[name="csrf-param"]')?.content ?? '_csrf_token';
 
 if ($('#image_target, .image-target') || $('#thumbnails-not-yet-generated')) {
   insertUI();
